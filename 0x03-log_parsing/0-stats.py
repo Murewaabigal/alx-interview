@@ -1,40 +1,48 @@
 #!/usr/bin/python3
-'''
-    Script that reads stdin line by line and computes metrics
-'''
-
+"""
+module contains a script that reads stdin line by line and computes metrics
+"""
 import sys
 
 
-def _print(file_size, status_dict):
-    '''
-        helper function to print the  results
-    '''
+status_codes = {
+    "200": 0,
+    "301": 0,
+    "400": 0,
+    "401": 0,
+    "403": 0,
+    "404": 0,
+    "405": 0,
+    "500": 0
+}
+
+file_size = 0
+
+
+def print_metrics():
+    """prints of the logs"""
     print("File size: {}".format(file_size))
-    for key, value in sorted(status_dict.items()):
-        if value > 0:
-            print("{}: {}".format(key, value))
+    for status in sorted(status_codes.keys()):
+        if status_codes[status]:
+            print("{}: {}".format(status, status_codes[status]))
 
 
-counter = 0
-total_size = 0
-
-status_stats = {'200': 0, '301': 0, '400': 0, '401': 0,
-                '403': 0, '404': 0, '405': 0, '500': 0
-                }
-
-try:
-    for line in sys.stdin:
-        data = line.split()
-        if len(data) < 9:
-            continue
-        code = data[7]
-        status_stats[code] += 1
-        total_size += int(data[8])
-
-        counter += 1
-        if counter == 10:
-            _print(total_size, status_stats)
-            counter = 0
-finally:
-    _print(total_size, status_stats)
+if __name__ == "__main__":
+    count = 0
+    try:
+        for line in sys.stdin:
+            try:
+                elems = line.split()
+                file_size += int(elems[-1])
+                if elems[-2] in status_codes:
+                    status_codes[elems[-2]] += 1
+            except Exception:
+                pass
+            if count == 9:
+                print_metrics()
+                count = -1
+            count += 1
+    except KeyboardInterrupt:
+        print_metrics()
+        raise
+    print_metrics()
